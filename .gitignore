@@ -1,7 +1,16 @@
+.jac/
+node_modules/
 __pycache__/
 *.pyc
+server.log
+.env
+tests/diff/*.json
+tests/diff/*.err
+tests/diff/d.txt
+
+# Leftovers from the Python/React version (kept on the python-react branch). Never commit secrets.
+backend/
+frontend/
+*client id*
+*client_secret*
 .venv/
-backend/.env
-backend/campussync.db*
-frontend/node_modules/
-.pytest_cache/

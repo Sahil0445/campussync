@@ -6,26 +6,26 @@ With Google connected, CampusSync:
 
 Scopes requested: `openid email`, `calendar.events.readonly` (busy times), `calendar.app.created` (the shifts calendar it owns).
 
-## Setup (the person who runs the server, ~10 minutes)
+## Setup (~10 minutes)
 
-1. https://console.cloud.google.com/ → create a project, e.g. **CampusSync**.
+You can reuse the OAuth client you made for the Render version — just add the new address to it (step 4).
+
+1. https://console.cloud.google.com/ → your **CampusSync** project (or create one).
 2. **APIs & Services → Library → Google Calendar API → Enable.**
-3. **APIs & Services → OAuth consent screen** (now called "Google Auth Platform"):
-   - User type **External**, app name, support email, developer email.
-   - Leave publishing status on **Testing**.
-   - **Audience → Test users → Add users:** every Google account that will connect (yours and your friends'). Up to 100. Only listed accounts can connect while the app is in Testing.
-4. **Clients (Credentials) → Create client → OAuth client ID:**
-   - Application type **Web application**
-   - **Authorized JavaScript origins:** `https://YOUR-APP.onrender.com`
-   - **Authorized redirect URIs:** `https://YOUR-APP.onrender.com/auth/google/callback`
+3. **Google Auth Platform → Audience:** publishing status **Testing**; under **Test users** add every Google account that will connect (yours and your friends'). Up to 100. Only listed accounts can connect while the app is in Testing.
+4. **Google Auth Platform → Clients →** your Web client (or **Create client → Web application**):
+   - **Authorized JavaScript origins:** `https://YOUR-APP-URL` (your JacHammer address, no trailing slash)
+   - **Authorized redirect URIs:** `https://YOUR-APP-URL/auth/google/callback`
      (for local testing also add `http://localhost:8000/auth/google/callback`)
-5. Copy the **Client ID** and **Client secret** into Render → your service → **Environment** as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (or into `backend/.env` locally). Save; Render redeploys.
-6. Check `https://YOUR-APP.onrender.com/healthz` → `"google_calendar": true` and `google_redirect_uri` exactly matching step 4.
+5. In JacHammer → your project → **Settings → Environment**, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `CAMPUSSYNC_PUBLIC_URL=https://YOUR-APP-URL`, then redeploy.
+6. Open `https://YOUR-APP-URL/status` → `"google_calendar": true` and `"google_redirect_uri"` exactly matching step 4.
+
+Never commit the client secret (or the downloaded client JSON/txt) to git.
 
 ## What testers will see
 - Google shows **"Google hasn't verified this app"** → **Continue** (normal for apps in Testing).
 - Two permission boxes (see events, manage calendars CampusSync creates) — both must be ticked.
-- In Testing mode Google expires the connection after **7 days**; the app then shows "Reconnect Google Calendar". Publishing the app (Google verification) removes that limit.
+- In Testing mode Google expires the connection after **7 days**; the app then shows "Reconnect Google". Publishing the app (Google verification) removes that limit.
 
 ## Without Google setup
 Employees can paste their calendar's **secret iCal address** (Google: Settings → your calendar → Integrate calendar), or upload an .ics file. That reads busy times but can't write shifts back.

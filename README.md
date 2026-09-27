@@ -4,18 +4,25 @@
 
 **Rules are code. Judgment is AI. Anything that changes a real person's week needs a human's approval.**
 
+**100% Jac.** The server (graph model, rules engine, agents, time reporting, pay, alerts, Web Push, Google Calendar, the autopilot scheduled task) and every screen of the web app (Jac client components compiled to React) are written in [Jac](https://www.jac-lang.org). Built for JacHacks 2026, deployed on [JacHammer](https://jachammer.ai).
+
 ---
 
 ## Quick start
 
-- **Windows:** double-click `run.bat` · **macOS / Linux:** `./run.sh` → http://localhost:8000 (Python 3.10+; the frontend is prebuilt).
-- **Live for friends' phones:** deploy to Render — [docs/DEPLOY.md](docs/DEPLOY.md). Phones need HTTPS for Google sign-in and push notifications.
-- **Gemini (optional):** `GEMINI_API_KEY=` in `backend/.env`. Without it the agents use built-in logic.
-- **Google Calendar:** [docs/GOOGLE_CALENDAR.md](docs/GOOGLE_CALENDAR.md).
-- **Demo accounts** (password `demo1234`, also on the sign-in page): `dining@demo.edu` (campus employer), `shield@demo.com` (security company), `priya@demo.edu` (international student, 2 jobs), `marcus@demo.edu`, `sam@demo.edu`, `tom@demo.com` (security guard). Join codes: `DINE-2026`, `CSE-2026`, `SHLD-2026`.
-- **Rehearsals:** `/demo` resets the seed (needs the admin key on the live server), forces an autopilot cycle, simulates calendar events.
+```bash
+# Jac 0.37.23 (pinned in jac.toml)
+jac install        # Python + npm dependencies
+jac run            # http://localhost:8000  (dev mode, hot reload)
+jac run --no-dev   # production build of the web app
+```
 
-> The first start after upgrading resets the database automatically (schema v3).
+- **Deploy for friends' phones:** [docs/DEPLOY_JACHAMMER.md](docs/DEPLOY_JACHAMMER.md). Phones need HTTPS for Google sign-in and push notifications.
+- **Gemini (optional):** set `GEMINI_API_KEY`. Without it the agents use built-in logic and say so in the UI; every rule still runs the same.
+- **Google Calendar:** [docs/GOOGLE_CALENDAR.md](docs/GOOGLE_CALENDAR.md).
+- **Demo accounts** (password `demo1234`, also one tap on the sign-in page): `dining@demo.edu` (campus employer), `shield@demo.com` (security company), `priya@demo.edu` (international student, 2 jobs), `marcus@demo.edu`, `sam@demo.edu`, `tom@demo.com` (security guard). Join codes: `DINE-2026`, `CSE-2026`, `SHLD-2026`. The demo data is created automatically on first start.
+- **Rehearsals:** `/demo` resets the seed (needs the admin key when `CAMPUSSYNC_ADMIN_KEY` is set), forces an autopilot cycle, simulates calendar events.
+- **Status:** `/status` shows whether Gemini and Google Calendar are configured and when the autopilot last ran.
 
 ## Who uses it
 
@@ -28,11 +35,11 @@
 | Time | Timesheets: hours reported automatically, flagged lines to accept or keep, CSV export | Friday: check the auto-reported hours, approve in one tap or flag a line |
 | Alerts | Approvals, flagged hours, new team members | Push: 24 h and 1 h before every shift · Friday 9 AM approve · Friday 6 PM reminder if still pending |
 
-**Automated time reporting:** when a published shift ends, its hours are reported automatically. Employees confirm on Friday; corrections go to the employer. An international student's reported hours can never exceed 20 in a week across all jobs — a correction that would is refused in code ("over-clocking" protection).
+**Automated time reporting:** when a published shift ends, its hours are reported automatically. Employees confirm on Friday; corrections go to the employer. An international student's reported hours can never exceed 20 in a week across all jobs — a correction that would is refused in code.
 
 **Pay estimates:** 2026 federal brackets with the standard deduction, the employer's flat state rate, and 7.65 % FICA (international students on F-1/J-1 visas are generally exempt). Labeled as an estimate everywhere.
 
-**Phone notifications:** Web Push (VAPID + RFC 8291 encryption, implemented on `cryptography`). Android/desktop Chrome, Edge, Firefox work directly; **iPhone needs Add to Home Screen first** (iOS 16.4+, Apple's rule). Profile → Phone alerts has a test button and previews of every alert.
+**Phone notifications:** Web Push (VAPID + RFC 8291 encryption). Android/desktop Chrome, Edge, Firefox work directly; **iPhone needs Add to Home Screen first** (iOS 16.4+, Apple's rule). Profile → Phone alerts has a test button and previews of every alert.
 
 ## What's automated
 
@@ -42,94 +49,66 @@
 | Noticing a new clash | **Availability Agent** sees the event land on a shift and hands it to the **Swap Agent** | — |
 | Building the week | **Scheduling Agent** drafts automatically whenever slots are open | **Approve** (1 tap) |
 | Covering unfillable slots | **Recruiting Agent** finds free students across campus. Their autopilot accepts, and the slot fills itself | **Invite** (1 tap) |
-| Finding swaps | **Swap Agent** tries 1:1 swaps, then 3- and 4-person loops, and re-plans on decline. Falls back to finding someone to take the shift | **Approve** (1 tap) |
-| Answering swap offers | **Student autopilot** accepts moves into days the student said they're open to | Only if the move is outside their preferences |
-| Answering job invites | **Student autopilot** accepts if it fits the hours they want | Only if it doesn't |
+| Finding swaps | **Swap Agent** tries 1:1 swaps, then 3- and 4-person loops, and re-plans on decline | **Approve** (1 tap) |
+| Answering swap offers and job invites | **Employee autopilot** accepts what fits their open days and hours | Only if it doesn't fit |
 | Setting up staffing needs | **Needs Agent** turns "café open 7–7, busy at lunch" into weekly blocks | Confirm |
-| Checking a person or a slot | **Copilot** (Ctrl K): "Can Priya work Wed 12–3?", "Who can cover Fri evening?", "Need 2 more Saturday 3–7" | Type one sentence |
-| Telling your job something changed | **Student copilot**: "I can't do Saturday, Wednesday works" | Type one sentence |
-
-the Dashboard shows **Done by agents** as a live percentage. In the full demo, humans make about 6 clicks and the agents do everything else.
+| Checking a person or a slot | **Copilot** (Ctrl K): "Can Priya work Wed 12–3?", "Who can cover Fri evening?" | Type one sentence |
+| Telling your job something changed | **Campus AI**: "I can't do Saturday, Wednesday works" | Type one sentence |
 
 **Hard limits, enforced only in code, at every step:** 20 h/week across all employers for international students (in schedules *and* reported hours); never more than an employer's assigned hours; 8 h/day for students, 12 h/day for regular employees; 30 minutes' rest between shifts; no overlap with classes, calendar events or any other shift; only people holding a shift's role can take it.
 
-**Minimum disclosure:** departments get only `available / schedule_conflict / hour_limit + hours_left`. Rate limits stop them mapping a student's week by trial and error. Calendar event titles appear in the student's own feed, never in a department's feed.
+**Minimum disclosure:** employers get only `available / schedule_conflict / hour_limit + hours_left`. Rate limits stop them mapping someone's week by trial and error.
 
 ---
 
 ## Demo script (≈3 minutes, 2–3 devices)
 
-**Before you start:** open `/demo` and click **Reset demo data**. Autopilot immediately drafts the week and the Recruiting Agent finds two students for Saturday. Everything is waiting in **Approvals**.
+**Before you start:** open `/demo` and click **Reset demo data**. Autopilot drafts the week and the Recruiting Agent finds two students for Saturday. Everything waits in **Approvals**. Sign in with the one-tap demo buttons (password `demo1234`).
 
-Sign in with the **one-tap demo buttons** on the sign-in page. Everyone's password is `demo1234`.
-
-**Act 1 — Privacy (laptop, Campus Dining)**
-1. In the command bar (Ctrl K), type **"Can Priya work Wednesday 12 to 3?"** You'll see *"Can't schedule Priya… 🔒 Details are private to the student."*
-2. Type **"Add 3 hours for Priya on Thursday"**. You'll see *"Hours you can still schedule: 0."*
-3. On Priya's phone: **20 / 20**, across CSE Research and Campus Dining. *"Neither department could have caught that. The coordination layer did."*
-
-**Act 2 — The week builds itself**
-
-4. **Approvals → Review** the draft. The agent network lights up while the run replays and the grid fills in: **22 of 24**, with Saturday 15–19 flagged.
-5. **Approve & publish.** Then click **Invite** on Mia and on Ravi. Their autopilots accept, the Saturday gap fills itself, and the Dashboard shows **100% · 24 of 24**.
-
-**Act 3 — Life happens (nobody presses "request a change")**
-
-6. In the `/demo` tab, click **Add event** on *"Priya adds 'Family visit' Saturday 9–17"*. Within seconds, the live feed on the Dashboard shows *"Priya can no longer make Sat 11:00–15:00 (calendar change). Swap Agent is on it."* Priya's phone shows *"Campus AI is handling a change."*
-7. **Approvals → Review** shows the 3-person loop (Priya → Sam → Marcus). Click **Approve**. Priya's and Sam's autopilots accept instantly.
-8. On Marcus's phone (his autopilot is off): **Decline** → *"Thursday doesn't work for me anymore."*
-9. Watch the laptop without reloading. The Swap Agent re-plans live and a **New option · 4-person swap** appears. Click **Approve new swap** to get **"Swap complete. All 4 schedules updated."** Every autopilot agreed. Priya has Wednesday and is still at 20.
-
-**Close:** point at the **Done by agents** percentage on the Dashboard.
+1. **Privacy (laptop, Campus Dining):** Ctrl K → **"Can Priya work Wednesday 12 to 3?"** → *"Can't schedule Priya… Details are private to the student."* Then **"Add 3 hours for Priya on Thursday"** → *"Hours you can still schedule: 0."* On Priya's phone: **20 / 20** across two employers.
+2. **The week builds itself:** Approvals → **Review** the draft (22 of 24) → **Approve & publish** → **Invite** Mia and Ravi. Their autopilots accept and Saturday fills itself.
+3. **Life happens:** in `/demo`, **Add event** on Priya's "Family visit". The Swap Agent finds a 3-person loop → **Approve**. On Marcus's phone (autopilot off) → **Decline**. Without reloading, a **4-person swap** appears → **Approve new swap** → *"Swap complete. All 4 schedules updated."*
 
 ---
 
-## Architecture
+## Architecture (all Jac)
 
 ```
-frontend (React + Vite, PWA)  ──POST /walker/<name>──▶  backend (FastAPI + Postgres/SQLite)
-                                                   │
-  services/autopilot.py   background loop: sync → draft → recruit → auto-accept → fill → report hours → alerts → push
-  services/timesheets.py  automated time reporting, Friday approval, 20 h guard, analytics
-  services/payroll.py     take-home estimate (federal brackets, state rate, FICA)
-  services/alerts.py      24 h / 1 h shift reminders, Friday 9 AM / 6 PM timesheet alerts (sent exactly once)
-  services/push.py        Web Push: VAPID + aes128gcm encryption
-  walkers/membership.py   employers, employees, join codes, one-employer rule
-  walkers/org.py          organization settings, roles, team pay, timesheets
-  services/calendar.py    Google OAuth (read busy + write "CampusSync shifts") · iCal links · demo feed · clash detection
-  services/swaps.py       swap workflow + Commit Service (all moves or none)
-  agents/rules.py         Conflict Agent + Compliance Checker (code, never AI)
-  agents/scheduling.py    Scheduling Agent (AI proposes, rules validate)
-  agents/swap.py          Swap Agent (deterministic search ≤4, AI explains)
-  agents/recruiting.py    Recruiting Agent
-  agents/needs.py         Needs Agent
-  agents/copilot.py       natural-language → intent (Gemini, regex fallback)
-  agents/availability.py  .ics parsing + note parsing
-  walkers/                privacy boundary — decides what leaves
-  events.py               live agent feed
+web/  (Jac client components → React, PWA)      ──POST /function/<name>──▶   server/  (Jac, graph on Postgres)
+  App.jac                routes                                              api_*.jac        endpoints (def:pub / def:protect) — the privacy boundary
+  pages/*.jac            landing, sign-up, employer, employee screens        models.jac       nodes: Employer, Employee, Employment, Shift, TimeEntry, …
+  components/*.jac       shell, charts, week calendar, agent panel, …        rules.jac        Conflict Agent + Compliance Checker (code, never AI)
+  lib/api.jac            calls, sessions (Jac built-in accounts)            ai.jac           byLLM `by gemini(...)` typed agent calls, model fallback
+  lib/push.jac           Web Push subscribe                                 scheduling.jac   Scheduling Agent (AI proposes, rules validate)
+                                                                             swaps.jac        Swap Agent (search ≤4) + Commit Service (all or nothing)
+                                                                             recruiting.jac   Recruiting Agent
+                                                                             needs.jac        Needs Agent · copilot.jac · availability.jac
+                                                                             timesheets.jac   time reporting, Friday approval, 20 h guard, analytics
+                                                                             payroll.jac      take-home estimate
+                                                                             alerts.jac       24 h / 1 h / Friday alerts (exactly once)
+                                                                             push.jac         Web Push: VAPID + aes128gcm
+                                                                             calendar.jac     Google OAuth · iCal links · demo feed · clash detection
+                                                                             autopilot.jac    @schedule every 15 s: sync → draft → recruit → accept → fill → report → alert → push
+                                                                             web_routes.jac   /sw.js, manifest, icons, /status, Google callback, demo room
 ```
 
-All AI calls go through `agents/llm.py`. Every caller has a deterministic fallback, so a quota error on stage changes nothing except the wording.
+Every AI call has a deterministic fallback, so a quota error on stage changes nothing except the wording.
 
-## Development
+## Development checks
 
 ```bash
-cd backend && python -m pytest -q        # 37 tests: demo acts, employers & join codes, roles, time reporting, alerts, push, Google (mocked), privacy
-TEST_DATABASE_URL=postgresql+psycopg://user@host/db python -m pytest -q   # same suite on Postgres
-cd frontend && npm install && npm run dev   # http://localhost:5173 (proxies the API)
+jac check                      # type-check the whole program (server + web)
+jac run --no-takeover tests/push_check.jac # Web Push encryption round-trip + VAPID signature
+jac run --no-takeover tests/gcal_check.jac # Google Calendar sync against a fake API (idempotent writes)
+jac run --no-takeover tests/ai_check.jac # typed agent calls with a mock model
 ```
 
-API docs: http://localhost:8000/api/docs. The API matches `jac serve` (`POST /walker/<name>` → `{"reports": [...]}`), so the frontend ports to JacHammer unchanged. See [docs/JAC_PORT.md](docs/JAC_PORT.md).
+The Jac port was verified against the original Python/React build: the same API scenarios (≈150 steps: sign-ups, schedules, swaps, time travel for alerts and timesheets) return identical results, and every screen renders pixel-identical at 390 px and 1440 px.
 
 ## Seed data notes
 
-These are deliberate choices so the demo is guaranteed, not lucky:
 - Dining runs Mon–Sat, 11–15 and 15–19, with 2 people per shift (24 slots). Every shift is 4 hours, so a swap never changes anyone's total hours.
 - Priya works CSE Research 12 h + Campus Dining 8 h = 20/20. She's open to swapping into Wednesday.
 - Autopilot is on for everyone except **Marcus**, so he's the one who gets asked on stage.
 - Ravi and Mia aren't on any team. They're the students the Recruiting Agent finds for Saturday.
 - Every seed student uses the built-in demo calendar feed, so the stage needs no network. New sign-ups connect real calendars.
-
-## Roadmap
-
-Google Calendar watch channels instead of 5-minute polling · password reset by email · email/SMS alerts · payroll export formats (ADP, Gusto) · Google app verification (removes the 7-day reconnect in Testing mode).

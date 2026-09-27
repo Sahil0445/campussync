@@ -1,0 +1,58 @@
+[project]
+name = "campussync"
+version = "2.0.0"
+description = "CampusSync - scheduling, automated time reporting and pay for shift-based teams. Rules are code. Judgment is AI. Humans just approve."
+entry-point = "main"
+kind = "web-app"
+jac-version = "==0.37.23"
+
+[dependencies]
+cryptography = ">=42"
+httpx = ">=0.27"
+tzdata = ">=2024.1"
+
+[dependencies.npm]
+react = "^19.2.0"
+react-dom = "^19.2.0"
+react-router-dom = "^6.22.0"
+lucide-react = "^0.460.0"
+
+[dependencies.npm.dev]
+vite = "^6.4.1"
+"@vitejs/plugin-react" = "^4.7.0"
+typescript = "^5.3.3"
+"@types/react" = "^19.2.0"
+"@types/react-dom" = "^19.2.0"
+
+[serve]
+docs_enabled = false
+graph_enabled = false
+
+[placement]
+default = "server"
+
+[placement.pins]
+"web.*" = "client"
+
+[scale.scheduler]
+enabled = true
+
+[client]
+
+[client.app_meta_data]
+title = "CampusSync"
+description = "CampusSync — scheduling, automated time reporting and pay for campus jobs and small businesses. Humans just approve."
+viewport = "width=device-width, initial-scale=1.0, viewport-fit=cover"
+theme_color = "#05060A"
+icon = "/favicon.svg"
+manifest = "/manifest.webmanifest"
+apple_touch_icon = "/icons/apple-touch-icon.png"
+meta_apple_mobile_web_app_capable = "yes"
+meta_mobile_web_app_capable = "yes"
+meta_apple_mobile_web_app_title = "CampusSync"
+meta_apple_mobile_web_app_status_bar_style = "black-translucent"
+link_preconnect = "https://fonts.googleapis.com"
+link_stylesheet = "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+
+[byllm.model]
+default_model = "gemini/gemini-3.5-flash"
