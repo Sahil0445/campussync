@@ -96,6 +96,10 @@ async def _post(path: str, body: any, auth: bool, token: str = "") -> any {
     } except Exception {
         data = None;
     }
+    if res.ok and not data {
+        # A 200 whose body can't be read (a proxy broke it): say so instead of failing later.
+        raise apiError("CampusSync sent a reply your browser couldn't read. Reload and try again.", res.status);
+    }
     if not res.ok or (data and data.ok == False) {
         if res.status == 401 and auth and not token {
             setSession(None);

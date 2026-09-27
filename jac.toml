@@ -28,6 +28,11 @@ typescript = "^5.3.3"
 docs_enabled = false
 graph_enabled = false
 
+# JacHammer's proxy mangles gzip bodies from the app server (browser: ERR_CONTENT_DECODING_FAILED on
+# any response over 1 KB). Let the platform's own proxy do compression instead.
+[serve.compression]
+enabled = false
+
 [placement]
 default = "server"
 
