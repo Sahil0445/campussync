@@ -12,12 +12,16 @@ The repository root must be this Jac project (`jac.toml`, `main.jac`, `server/`,
 2. Import an existing repository: point it at `https://github.com/<you>/campussync` (public repos are cloned directly;
    for a private repo connect GitHub first). Import works on the Free plan.
 
-## 3. Environment variables (Project → Settings → Environment)
+## 3. Environment variables (your campussync project → Settings → Environment)
+Put every variable in the **project's** environment (the same place the first deploy asked for them) — not in your
+account/user settings, which are separate. After any change, click **Redeploy**; then `/status` →
+`settings_received` shows `true` for each variable the server got (never the values).
+
 | Name | Value | Needed |
 |---|---|---|
 | `JAC_SERVE_AUTH_SECRET` | a long random string (e.g. 48+ characters) — signs everyone's login tokens | **yes** |
 | `CAMPUSSYNC_ADMIN_KEY` | a random string you keep private — required to reset the demo at `/demo` | **yes** |
-| `GEMINI_API_KEY` | your Gemini key | optional (agents fall back to built-in logic) |
+| `CAMPUSSYNC_GEMINI_API_KEY` | your Gemini key (`GEMINI_API_KEY` also works) | optional (agents fall back to built-in logic) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | from Google Cloud, see [GOOGLE_CALENDAR.md](GOOGLE_CALENDAR.md) | optional |
 | `CAMPUSSYNC_PUBLIC_URL` | your deploy URL, e.g. `https://campussync-xxxx.jachammer.app` (no trailing slash) | with Google |
 | `CAMPUSSYNC_TZ` | default time zone, default `America/New_York` | optional |

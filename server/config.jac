@@ -4,7 +4,7 @@ import os;
 import from datetime { date }
 
 def _env(key: str, dflt: str = "") -> str {
-    return str(os.getenv(key, dflt) or dflt).strip();
+    return str(os.getenv(key, dflt) or dflt).strip().strip('"').strip("'").strip();
 }
 
 def _envf(key: str, dflt: float) -> float {
@@ -24,7 +24,7 @@ def _envi(key: str, dflt: int) -> int {
 }
 
 # AI: Gemini through byLLM. Empty key -> deterministic fallback for every agent.
-glob GEMINI_API_KEY: str = _env("GEMINI_API_KEY") or _env("GOOGLE_API_KEY"),
+glob GEMINI_API_KEY: str = _env("CAMPUSSYNC_GEMINI_API_KEY") or _env("GEMINI_API_KEY") or _env("GOOGLE_API_KEY"),
      GEMINI_MODEL: str = _env("GEMINI_MODEL", "gemini-3.5-flash"),
      GEMINI_FALLBACK_MODELS: str = _env(
          "GEMINI_FALLBACK_MODELS",

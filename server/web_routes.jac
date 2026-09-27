@@ -5,6 +5,7 @@ These are raw (non-envelope) function endpoints so the browser gets exactly what
 a service worker at /sw.js (scope "/"), a manifest, icons, and an HTML redirect after Google sign-in.
 """
 
+import os;
 import json;
 import html;
 import logging;
@@ -75,6 +76,14 @@ def:pub app_status() -> dict[str, any] {
         "seeded": hub().seeded,
         "last_ai_error": ai.last_error or None,
         "demo": DEMO_MODE,
+        # Which settings this server received (true/false only -- never the values).
+        "settings_received": {
+            name: bool((os.environ.get(name) or "").strip())
+            for name in [
+                "JAC_SERVE_AUTH_SECRET", "CAMPUSSYNC_ADMIN_KEY", "CAMPUSSYNC_GEMINI_API_KEY", "GEMINI_API_KEY",
+                "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "CAMPUSSYNC_PUBLIC_URL"
+            ]
+        },
         "server_time": utcnow().isoformat() + "Z"
     };
 }
