@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+backend/.env
+backend/campussync.db*
+frontend/node_modules/
+.pytest_cache/
